@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>AziRotate v1.26</title>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <script src="https://unpkg.com/topojson@3"></script>
+    <style>
+        :root { --accent: #48d1cc; --bg: #000; --panel: rgba(22, 27, 34, 0.95); --border: #30363d; --text: #c9d1d9; --btn-text: #000; }
+        body { margin: 0; background: var(--bg); color: var(--text); font-family: 'SF Mono', monospace; display: flex; height: 100vh; overflow: hidden; }
+        #sidebar { width: 300px; background: var(--panel); border-right: 1px solid var(--border); display: flex; flex-direction: column; padding: 20px; z-index: 1000; overflow-y: auto; }
+        .section { margin-bottom: 20px; border-top: 1px solid var(--border); padding-top: 15px; }
+        h2 { font-size: 10px; color: #8b949e; text-transform: uppercase; margin-bottom: 12px; letter-spacing: 1px; border-left: 2px solid var(--accent); padding-left: 8px; }
+        .control-group { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; font-size: 11px; }
+        select, input[type="number"] { background: rgba(0,0,0,0.3); border: 1px solid var(--border); color: var(--text); padding: 5px 8px; border-radius: 4px; font-family: inherit; }
+        input[type="number"] { width: 75px; text-align: right; }
+        
+        /* Switch UI 視認性改善 */
+        .switch { position: relative; width: 34px; height: 18px; }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background: #21262d; transition: .3s; border-radius: 20px; border: 1px solid var(--border); }
+        .slider:before { position: absolute; content: ""; height: 12px; width: 12px; left: 2px; bottom: 2px; background: white; transition: .3s; border-radius: 50%; box-shadow: 0 1px 3px rgba(0,0,0,0.4); }
+        input:checked + .slider { background: var(--accent); }
+        input:checked + .slider:before { transform: translateX(16px); }
+
+        #sidebar-footer { margin-top: auto; padding-top: 20px; border-top: 1px solid var(--border); }
+        .lang-toggle { display: flex; gap: 5px; }
+        .lang-btn { cursor: pointer; padding: 6px 12px; border: 1px solid var(--border); border-radius: 4px; font-size: 10px; flex: 1; text-align: center; color: #888; transition: 0.2s; }
+        .lang-btn.active { background: var(--accent); color: var(--btn-text); border-color: var(--accent); font-weight: bold; }
+
+        #settings-trigger { position: absolute; bottom: 20px; right: 20px; width: 44px; height: 44px; background: var(--panel); border: 1px solid var(--border); color: var(--accent); border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 20px; z-index: 2000; transition: 0.3s; }
+        #config-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 2500; display: none; align-items: center; justify-content: center; }
+        #config-content { background: var(--panel); border: 1px solid var(--accent); padding: 30px; width: 400px; border-radius: 8px; position: relative; color: var(--text); }
+
+        #map-container { flex-grow: 1; position: relative; background: #000; }
+        canvas { display: block; }
+    </style>
+</head>
+<body>
+
+<div id="sidebar">
+    <h1 id="main-title" style="font-size:18px; color:var(--accent); margin:0;">AziRotate</h1>
+    <div style="font-size:9px; opacity:0.5; margin-bottom:20px;">v1.26</div>
+
+    <div class="section">
+        <h2 id="head-city">City Presets</h2>
+        <select id="city-select" style="width:100%"></select>
+    </div>
+
+    <div class="section">
+        <h2 id="head-telemetry">Telemetry</h2>
+        <div class="control-group"><span id="lbl-lat">LATITUDE</span><input type="number" id="in-lat" step="0.01"></div>
+        <div class="control-group"><span id="lbl-lng">LONGITUDE</span><input type="number" id="in-lng" step="0.01"></div>
+        <div class="control-group"><span id="lbl-roll">HEADING</span><input type="number" id="in-roll" step="0.1"></div>
+        <div class="control-group"><span id="lbl-scale">SCALE</span><input type="number" id="in-scale" step="10"></div>
+    </div>
+
+    <div class="section">
+        <h2 id="head-measure">Measurement</h2>
+        <div class="control-group"><span id="lbl-dist">DISTANCE</span><span id="dist-val" style="color:var(--accent); font-weight:bold;">0 km</span></div>
+    </div>
+
+    <div class="section">
+        <h2 id="head-layers">Layers</h2>
+        <div class="control-group"><span id="lbl-borders">BORDERS</span><label class="switch"><input type="checkbox" id="check-borders" checked onchange="render()"><span class="slider"></span></label></div>
+        <div class="control-group"><span id="lbl-cities">CITY NAMES</span><label class="switch"><input type="checkbox" id="check-city-names" checked onchange="render()"><span class="slider"></span></label></div>
+        <div class="control-group"><span id="lbl-circles">DIST. CIRCLES</span><label class="switch"><input type="checkbox" id="check-circles" checked onchange="render()"><span class="slider"></span></label></div>
+        <div class="control-group"><span id="lbl-guide">CENTER GUIDE</span><label class="switch"><input type="checkbox" id="check-guide" checked onchange="render()"><span class="slider"></span></label></div>
+        <div class="control-group"><span id="lbl-grid">GRATICULE</span><label class="switch"><input type="checkbox" id="check-grid" checked onchange="render()"><span class="slider"></span></label></div>
+    </div>
+
+    <div id="sidebar-footer">
+        <div class="lang-toggle">
+            <div id="btn-en" class="lang-btn active" onclick="setLang('en')">ENGLISH</div>
+            <div id="btn-jp" class="lang-btn" onclick="setLang('jp')">日本語</div>
+        </div>
+    </div>
+</div>
+
+<div id="map-container">
+    <div id="settings-trigger" onclick="toggleConfig()">⚙</div>
+    <div id="config-overlay" onclick="if(event.target==this) toggleConfig()">
+        <div id="config-content">
+            <h2 id="cfg-title" style="color:var(--text); border:none; font-size:16px;">SYSTEM SETTINGS</h2>
+            <div class="control-group" style="margin-top:20px;"><span id="lbl-theme">VISUAL THEME</span>
+                <select id="theme-select" style="width:180px;" onchange="render()">
+                    <option value="cyber">CYBER (NEON BLUE)</option>
+                    <option value="military">MILITARY (AMBER)</option>
+                    <option value="nature">NATURE (SOFT GREEN/BLUE)</option>
+                    <option value="classic">CLASSIC (VINTAGE MAP)</option>
+                    <option value="paper">PAPER (INK PRINT)</option>
+                </select>
+            </div>
+            <button id="btn-export" onclick="exportMap()" style="width:100%; padding:12px; margin-top:20px; background:transparent; border:1px solid var(--accent); color:var(--accent); cursor:pointer;">EXPORT PNG</button>
+            <div id="credit" style="margin-top:30px; font-size:10px; opacity:0.7; border-top:1px solid var(--border); padding-top:15px; line-height: 1.6;">
+                <b style="color:var(--accent)">AziRotate v1.26</b><br>
+                Created by <b>Shinichi Kawano</b><br>
+                Azimuthal Equidistant Analysis Engine<br>
+                Powered by D3.js & TopoJSON
+            </div>
+        </div>
+    </div>
+    <canvas id="map"></canvas>
+</div>
+
+<script>
+    const THEMES = {
+        cyber: { bg: "#000", sea: "#000510", land: "#1c2128", border: "#444c56", accent: "#48d1cc", grid: "rgba(72, 209, 204, 0.15)", circle: "rgba(72, 209, 204, 0.5)", guide: "#f85149", panel: "rgba(22, 27, 34, 0.95)", text: "#c9d1d9", btnText: "#000" },
+        military: { bg: "#000", sea: "#000", land: "#2d3319", border: "#556622", accent: "#ffb74d", grid: "rgba(255, 183, 77, 0.15)", circle: "rgba(255, 183, 77, 0.6)", guide: "#ff4444", panel: "rgba(26, 26, 0, 0.95)", text: "#ffb74d", btnText: "#000" },
+        nature: { bg: "#000", sea: "#5d8aa8", land: "#8fbc8f", border: "#ffffff66", accent: "#ffffff", grid: "rgba(255, 255, 255, 0.1)", circle: "rgba(255, 255, 255, 0.4)", guide: "#ff6b6b", panel: "rgba(30, 50, 40, 0.95)", text: "#e0f0e0", btnText: "#1b3022" },
+        classic: { bg: "#363636", sea: "#4a7d7f", land: "#a5a278", border: "#555", accent: "#fff", grid: "rgba(255, 255, 255, 0.2)", circle: "rgba(255, 255, 255, 0.4)", guide: "#ff6b6b", panel: "rgba(54, 54, 54, 0.95)", text: "#fff", btnText: "#363636" },
+        paper: { bg: "#f0f0f0", sea: "#e0e0e0", land: "#ffffff", border: "#999", accent: "#000", grid: "rgba(0, 0, 0, 0.05)", circle: "rgba(211, 47, 47, 0.4)", guide: "#d32f2f", panel: "rgba(255, 255, 255, 0.95)", text: "#000", btnText: "#fff" }
+    };
+
+    const CITY_REGIONS = [
+        { region: "Special Points", cities: [{ name: "Null Island", coord: [0, 0] }, { name: "North Pole", coord: [0, 89.9] }, { name: "South Pole", coord: [0, -89.9] }, { name: "Date Line", coord: [180, 0] }] },
+        { region: "East Asia", cities: [{ name: "Tokyo", coord: [139.76, 35.68] }, { name: "Osaka", coord: [135.5, 34.69] }, { name: "Seoul", coord: [126.97, 37.56] }, { name: "Beijing", coord: [116.4, 39.9] }, { name: "Shanghai", coord: [121.47, 31.23] }, { name: "Hong Kong", coord: [114.17, 22.31] }, { name: "Taipei", coord: [121.56, 25.03] }, { name: "Ulaanbaatar", coord: [106.88, 47.88] }] },
+        { region: "SE Asia / Oceania", cities: [{ name: "Singapore", coord: [103.81, 1.35] }, { name: "Bangkok", coord: [100.5, 13.75] }, { name: "Jakarta", coord: [106.84, -6.2] }, { name: "Manila", coord: [120.98, 14.59] }, { name: "Sydney", coord: [151.2, -33.86] }, { name: "Melbourne", coord: [144.96, -37.81] }, { name: "Auckland", coord: [174.76, -36.84] }] },
+        { region: "Europe", cities: [{ name: "London", coord: [-0.12, 51.5] }, { name: "Paris", coord: [2.35, 48.85] }, { name: "Berlin", coord: [13.4, 52.52] }, { name: "Rome", coord: [12.49, 41.9] }, { name: "Madrid", coord: [-3.7, 40.41] }, { name: "Amsterdam", coord: [4.89, 52.37] }, { name: "Moscow", coord: [37.61, 55.75] }, { name: "Stockholm", coord: [18.06, 59.32] }, { name: "Istanbul", coord: [28.97, 41.0] }] },
+        { region: "Americas", cities: [{ name: "New York", coord: [-74.0, 40.71] }, { name: "Washington DC", coord: [-77.03, 38.9] }, { name: "Chicago", coord: [-87.62, 41.87] }, { name: "Los Angeles", coord: [-118.24, 34.05] }, { name: "Toronto", coord: [-79.38, 43.65] }, { name: "Mexico City", coord: [-99.13, 19.43] }, { name: "Sao Paulo", coord: [-46.63, -23.55] }, { name: "Buenos Aires", coord: [-58.38, -34.6] }] },
+        { region: "Africa / Mid East", cities: [{ name: "Cairo", coord: [31.23, 30.04] }, { name: "Lagos", coord: [3.37, 6.52] }, { name: "Johannesburg", coord: [28.04, -26.2] }, { name: "Dubai", coord: [55.27, 25.2] }, { name: "Tehran", coord: [51.38, 35.68] }] }
+    ];
+
+    const TRANSLATIONS = {
+        en: { headCity: "City Presets", headTelemetry: "Telemetry", headMeasure: "Measurement", headLayers: "Layers", cfgTitle: "SYSTEM SETTINGS", lblLat: "LATITUDE", lblLng: "LONGITUDE", lblRoll: "HEADING", lblScale: "SCALE", lblDist: "DISTANCE", lblBorders: "BORDERS", lblCities: "CITY NAMES", lblCircles: "DIST. CIRCLES", lblGuide: "CENTER GUIDE", lblGrid: "GRATICULE", lblTheme: "VISUAL THEME", btnExport: "EXPORT PNG" },
+        jp: { headCity: "都市プリセット", headTelemetry: "テレメトリ", headMeasure: "距離計測", headLayers: "レイヤー設定", cfgTitle: "システム設定", lblLat: "緯度 (LAT)", lblLng: "経度 (LNG)", lblRoll: "方位角 (ROLL)", lblScale: "スケール", lblDist: "中心からの距離", lblBorders: "国境線", lblCities: "都市名表示", lblCircles: "等距離円", lblGuide: "センターガイド", lblGrid: "経緯度網", lblTheme: "配色テーマ", btnExport: "PNG形式で保存" }
+    };
+
+    let width, height, worldData, borderData, allCities = [];
+    let rotation = [-139.69, -35.68, 0];
+    const canvas = d3.select("#map");
+    const context = canvas.node().getContext("2d");
+    let projection = d3.geoAzimuthalEquidistant().scale(150).clipAngle(180 - 1e-3).precision(0.1);
+    const path = d3.geoPath(projection, context);
+
+    function toggleConfig() { const el = document.getElementById('config-overlay'); el.style.display = (el.style.display === 'flex') ? 'none' : 'flex'; }
+    function setLang(lang) {
+        document.getElementById('btn-en').classList.toggle('active', lang === 'en');
+        document.getElementById('btn-jp').classList.toggle('active', lang === 'jp');
+        const t = TRANSLATIONS[lang];
+        for(let key in t) { const el = document.getElementById(key.replace(/([A-Z])/g, "-$1").toLowerCase()); if(el) el.innerText = t[key]; }
+    }
+
+    function render() {
+        const theme = THEMES[document.getElementById('theme-select').value];
+        const root = document.documentElement;
+        root.style.setProperty('--accent', theme.accent);
+        root.style.setProperty('--bg', theme.bg);
+        root.style.setProperty('--panel', theme.panel);
+        root.style.setProperty('--text', theme.text);
+        root.style.setProperty('--btn-text', theme.btnText);
+        root.style.setProperty('--border', theme.border === "#ffffff66" ? "rgba(255,255,255,0.2)" : "rgba(128,128,128,0.2)");
+        
+        context.fillStyle = theme.bg;
+        context.fillRect(0, 0, width, height);
+        projection.rotate(rotation);
+        context.beginPath(); path({type: "Sphere"}); context.fillStyle = theme.sea; context.fill();
+        if(document.getElementById('check-grid').checked) { context.beginPath(); path(d3.geoGraticule10()); context.strokeStyle = theme.grid; context.lineWidth = 0.5; context.stroke(); }
+        context.beginPath(); path(worldData); context.fillStyle = theme.land; context.fill();
+        if(document.getElementById('check-borders').checked) { context.beginPath(); path(borderData); context.strokeStyle = theme.border; context.lineWidth = 0.8; context.stroke(); }
+        if(document.getElementById('check-city-names').checked) {
+            context.font = "9px SF Mono"; context.fillStyle = theme.accent;
+            allCities.forEach(c => {
+                const p = projection(c.coord);
+                if(p && p[0]>0 && p[0]<width && p[1]>0 && p[1]<height) { context.beginPath(); context.arc(p[0],p[1],2,0,7); context.fill(); context.fillText(c.name, p[0]+5, p[1]+3); }
+            });
+        }
+        if(document.getElementById('check-circles').checked) {
+            context.strokeStyle = theme.circle; context.lineWidth = 1.2; context.setLineDash([4, 6]);
+            for (let d = 30; d < 180; d += 30) { const c = d3.geoCircle().center([-rotation[0], -rotation[1]]).radius(d); context.beginPath(); path(c()); context.stroke(); }
+            context.setLineDash([]);
+        }
+        if(document.getElementById('check-guide').checked) {
+            context.strokeStyle = theme.guide; context.lineWidth = 1;
+            context.beginPath();
+            context.moveTo(width/2-20, height/2); context.lineTo(width/2+20, height/2);
+            context.moveTo(width/2, height/2-20); context.lineTo(width/2, height/2+20);
+            context.stroke();
+        }
+        updateUI();
+    }
+
+    function updateUI() {
+        document.getElementById('in-lat').value = (-rotation[1]).toFixed(2);
+        document.getElementById('in-lng').value = (-rotation[0]).toFixed(2);
+        document.getElementById('in-roll').value = ((rotation[2] % 360 + 360) % 360).toFixed(1);
+        document.getElementById('in-scale').value = Math.round((projection.scale() / 150) * 100);
+    }
+
+    canvas.call(d3.drag().on("drag", (e) => {
+        const k = 150 / projection.scale();
+        if (e.sourceEvent.shiftKey) rotation[2] += e.dx * 0.6;
+        else { rotation[0] += e.dx * k; rotation[1] -= e.dy * k; rotation[1] = Math.max(-90, Math.min(90, rotation[1])); }
+        render();
+    }));
+    canvas.on("wheel", (e) => { e.preventDefault(); const s = projection.scale(); projection.scale(e.deltaY > 0 ? s * 0.9 : s * 1.1); render(); });
+    canvas.on("mousemove", (e) => {
+        const coords = projection.invert(d3.pointer(e));
+        if (coords) { const d = Math.round(d3.geoDistance([-rotation[0], -rotation[1]], coords) * 6371); document.getElementById('dist-val').innerText = d.toLocaleString() + " km"; }
+    });
+
+    const sel = document.getElementById('city-select');
+    CITY_REGIONS.forEach(reg => {
+        const g = document.createElement('optgroup'); g.label = reg.region;
+        reg.cities.forEach(c => { g.appendChild(new Option(c.name, JSON.stringify(c.coord))); allCities.push(c); });
+        sel.appendChild(g);
+    });
+    sel.onchange = (e) => { if(e.target.value) { const c = JSON.parse(e.target.value); rotation = [-c[0], -c[1], rotation[2]]; render(); } };
+
+    d3.json("https://unpkg.com/world-atlas@2.0.2/countries-110m.json").then(data => {
+        worldData = topojson.feature(data, data.objects.land);
+        borderData = topojson.mesh(data, data.objects.countries, (a, b) => a !== b);
+        width = window.innerWidth - 300; height = window.innerHeight;
+        canvas.attr("width", width).attr("height", height);
+        projection.translate([width/2, height/2]);
+        setLang('en'); render();
+    });
+
+    function exportMap() { const link = document.createElement('a'); link.download = `azirotate-v126.png`; link.href = canvas.node().toDataURL(); link.click(); }
+</script>
+</body>
+</html>
