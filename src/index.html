@@ -253,14 +253,14 @@
     }
 
     function drawCenterGuide() {
-        const cx = Math.round(width / 2) + 0.5;
-        const cy = Math.round(height / 2) + 0.5;
+        const cx = width / 2;
+        const cy = height / 2;
         context.save();
-        context.lineWidth = 1.5;
-        drawDashedAxis(cx, cy, cx, 0);
-        drawDashedAxis(cx, cy, cx, height);
-        drawDashedAxis(cx, cy, 0, cy);
-        drawDashedAxis(cx, cy, width, cy);
+        context.setLineDash([6, 6]);
+        strokeAxisSegment(cx, cy, cx, 0);
+        strokeAxisSegment(cx, cy, cx, height);
+        strokeAxisSegment(cx, cy, 0, cy);
+        strokeAxisSegment(cx, cy, width, cy);
         context.restore();
 
         context.beginPath();
@@ -269,21 +269,10 @@
         context.stroke();
     }
 
-    function drawDashedAxis(fromX, fromY, toX, toY) {
-        const dash = 7;
-        const gap = 7;
-        const dx = toX - fromX;
-        const dy = toY - fromY;
-        const length = Math.hypot(dx, dy);
-        const ux = dx / length;
-        const uy = dy / length;
-
+    function strokeAxisSegment(fromX, fromY, toX, toY) {
         context.beginPath();
-        for (let offset = 0; offset < length; offset += dash + gap) {
-            const end = Math.min(offset + dash, length);
-            context.moveTo(fromX + ux * offset, fromY + uy * offset);
-            context.lineTo(fromX + ux * end, fromY + uy * end);
-        }
+        context.moveTo(fromX, fromY);
+        context.lineTo(toX, toY);
         context.stroke();
     }
 
