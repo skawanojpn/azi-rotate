@@ -1,13 +1,13 @@
 # Azimuthal Equidistant Map
 
-Azimuthal Equidistant Map is a single-page browser tool for viewing the world with an azimuthal equidistant projection. You can choose a city preset, rotate the projection, zoom the map, show or hide guide layers, and export the current view as a PNG.
+Azimuthal Equidistant Map is a single-page browser tool for viewing the world with an azimuthal equidistant projection. You can choose a city preset, rotate the projection, zoom the map, show or hide map layers, and export the current view as a PNG.
 
 ## Features
 
 - City presets for major regions
 - Latitude, longitude, heading, and scale controls
 - Distance readout from the map center
-- Toggleable borders, city names, distance circles, center guide, and graticule
+- Toggleable borders, city names, distance circles, and graticule
 - Visual themes, with Classic selected by default
 - Mobile-friendly layout with the map above the control panel and a fit-to-view default scale
 - PNG export of the current map view

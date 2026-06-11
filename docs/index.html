@@ -114,7 +114,6 @@
         <div class="control-group"><span id="lbl-borders">BORDERS</span><label class="switch"><input type="checkbox" id="check-borders" checked><span class="slider"></span></label></div>
         <div class="control-group"><span id="lbl-cities">CITY NAMES</span><label class="switch"><input type="checkbox" id="check-city-names" checked><span class="slider"></span></label></div>
         <div class="control-group"><span id="lbl-circles">DIST. CIRCLES</span><label class="switch"><input type="checkbox" id="check-circles" checked><span class="slider"></span></label></div>
-        <div class="control-group"><span id="lbl-guide">CENTER GUIDE</span><label class="switch"><input type="checkbox" id="check-guide" checked><span class="slider"></span></label></div>
         <div class="control-group"><span id="lbl-grid">GRATICULE</span><label class="switch"><input type="checkbox" id="check-grid" checked><span class="slider"></span></label></div>
     </div>
 
@@ -155,11 +154,11 @@
 
 <script>
     const THEMES = {
-        cyber: { bg: "#000", sea: "#000510", land: "#1c2128", border: "#444c56", accent: "#48d1cc", grid: "rgba(72, 209, 204, 0.15)", circle: "rgba(72, 209, 204, 0.5)", guide: "#f85149", panel: "rgba(22, 27, 34, 0.95)", text: "#c9d1d9", btnText: "#000" },
-        military: { bg: "#000", sea: "#000", land: "#2d3319", border: "#556622", accent: "#ffb74d", grid: "rgba(255, 183, 77, 0.15)", circle: "rgba(255, 183, 77, 0.6)", guide: "#ff4444", panel: "rgba(26, 26, 0, 0.95)", text: "#ffb74d", btnText: "#000" },
-        nature: { bg: "#000", sea: "#5d8aa8", land: "#8fbc8f", border: "#ffffff66", accent: "#ffffff", grid: "rgba(255, 255, 255, 0.1)", circle: "rgba(255, 255, 255, 0.4)", guide: "#ff6b6b", panel: "rgba(30, 50, 40, 0.95)", text: "#e0f0e0", btnText: "#1b3022" },
-        classic: { bg: "#363636", sea: "#4a7d7f", land: "#a5a278", border: "#555", accent: "#fff", grid: "rgba(255, 255, 255, 0.2)", circle: "rgba(255, 255, 255, 0.4)", guide: "#ff6b6b", panel: "rgba(54, 54, 54, 0.95)", text: "#fff", btnText: "#363636" },
-        paper: { bg: "#f0f0f0", sea: "#e0e0e0", land: "#ffffff", border: "#999", accent: "#000", grid: "rgba(0, 0, 0, 0.05)", circle: "rgba(211, 47, 47, 0.4)", guide: "#d32f2f", panel: "rgba(255, 255, 255, 0.95)", text: "#000", btnText: "#fff" }
+        cyber: { bg: "#000", sea: "#000510", land: "#1c2128", border: "#444c56", accent: "#48d1cc", grid: "rgba(72, 209, 204, 0.15)", circle: "rgba(72, 209, 204, 0.5)", panel: "rgba(22, 27, 34, 0.95)", text: "#c9d1d9", btnText: "#000" },
+        military: { bg: "#000", sea: "#000", land: "#2d3319", border: "#556622", accent: "#ffb74d", grid: "rgba(255, 183, 77, 0.15)", circle: "rgba(255, 183, 77, 0.6)", panel: "rgba(26, 26, 0, 0.95)", text: "#ffb74d", btnText: "#000" },
+        nature: { bg: "#000", sea: "#5d8aa8", land: "#8fbc8f", border: "#ffffff66", accent: "#ffffff", grid: "rgba(255, 255, 255, 0.1)", circle: "rgba(255, 255, 255, 0.4)", panel: "rgba(30, 50, 40, 0.95)", text: "#e0f0e0", btnText: "#1b3022" },
+        classic: { bg: "#363636", sea: "#4a7d7f", land: "#a5a278", border: "#555", accent: "#fff", grid: "rgba(255, 255, 255, 0.2)", circle: "rgba(255, 255, 255, 0.4)", panel: "rgba(54, 54, 54, 0.95)", text: "#fff", btnText: "#363636" },
+        paper: { bg: "#f0f0f0", sea: "#e0e0e0", land: "#ffffff", border: "#999", accent: "#000", grid: "rgba(0, 0, 0, 0.05)", circle: "rgba(211, 47, 47, 0.4)", panel: "rgba(255, 255, 255, 0.95)", text: "#000", btnText: "#fff" }
     };
 
     const CITY_REGIONS = [
@@ -172,13 +171,13 @@
     ];
 
     const TRANSLATIONS = {
-        en: { appTitle: "Azimuthal Equidistant Map", headCity: "City Presets", headTelemetry: "Telemetry", headMeasure: "Measurement", headLayers: "Layers", cfgTitle: "SYSTEM SETTINGS", lblLat: "LATITUDE", lblLng: "LONGITUDE", lblRoll: "HEADING", lblScale: "SCALE", lblDist: "DISTANCE", lblBorders: "BORDERS", lblCities: "CITY NAMES", lblCircles: "DIST. CIRCLES", lblGuide: "CENTER GUIDE", lblGrid: "GRATICULE", lblTheme: "VISUAL THEME", btnExport: "EXPORT PNG" },
-        jp: { appTitle: "正距方位図ビューア", headCity: "都市プリセット", headTelemetry: "テレメトリ", headMeasure: "距離計測", headLayers: "レイヤー設定", cfgTitle: "システム設定", lblLat: "緯度 (LAT)", lblLng: "経度 (LNG)", lblRoll: "方位角 (ROLL)", lblScale: "スケール", lblDist: "中心からの距離", lblBorders: "国境線", lblCities: "都市名表示", lblCircles: "等距離円", lblGuide: "センターガイド", lblGrid: "経緯度網", lblTheme: "配色テーマ", btnExport: "PNG形式で保存" }
+        en: { appTitle: "Azimuthal Equidistant Map", headCity: "City Presets", headTelemetry: "Telemetry", headMeasure: "Measurement", headLayers: "Layers", cfgTitle: "SYSTEM SETTINGS", lblLat: "LATITUDE", lblLng: "LONGITUDE", lblRoll: "HEADING", lblScale: "SCALE", lblDist: "DISTANCE", lblBorders: "BORDERS", lblCities: "CITY NAMES", lblCircles: "DIST. CIRCLES", lblGrid: "GRATICULE", lblTheme: "VISUAL THEME", btnExport: "EXPORT PNG" },
+        jp: { appTitle: "正距方位図ビューア", headCity: "都市プリセット", headTelemetry: "テレメトリ", headMeasure: "距離計測", headLayers: "レイヤー設定", cfgTitle: "システム設定", lblLat: "緯度 (LAT)", lblLng: "経度 (LNG)", lblRoll: "方位角 (ROLL)", lblScale: "スケール", lblDist: "中心からの距離", lblBorders: "国境線", lblCities: "都市名表示", lblCircles: "等距離円", lblGrid: "経緯度網", lblTheme: "配色テーマ", btnExport: "PNG形式で保存" }
     };
 
     const BASE_SCALE = 150;
     const MOBILE_BREAKPOINT = 720;
-    const LAYER_CONTROL_IDS = ["check-borders", "check-city-names", "check-circles", "check-guide", "check-grid"];
+    const LAYER_CONTROL_IDS = ["check-borders", "check-city-names", "check-circles", "check-grid"];
     const NUMBER_INPUT_IDS = ["in-lat", "in-lng", "in-roll", "in-scale"];
     const $ = (id) => document.getElementById(id);
     let width, height, worldData, borderData, allCities = [];
@@ -244,13 +243,6 @@
             context.strokeStyle = theme.circle; context.lineWidth = 1.2; context.setLineDash([4, 6]);
             for (let d = 30; d < 180; d += 30) { const c = d3.geoCircle().center([-rotation[0], -rotation[1]]).radius(d); context.beginPath(); path(c()); context.stroke(); }
             context.setLineDash([]);
-        }
-        if($('check-guide').checked) {
-            context.strokeStyle = theme.guide; context.lineWidth = 1;
-            context.beginPath();
-            context.moveTo(width/2-20, height/2); context.lineTo(width/2+20, height/2);
-            context.moveTo(width/2, height/2-20); context.lineTo(width/2, height/2+20);
-            context.stroke();
         }
         updateUI();
     }
