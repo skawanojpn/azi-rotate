@@ -247,48 +247,12 @@
         }
         if($('check-guide').checked) {
             context.strokeStyle = theme.guide; context.lineWidth = 1;
-            drawCenterGuide();
+            context.beginPath();
+            context.moveTo(width/2-20, height/2); context.lineTo(width/2+20, height/2);
+            context.moveTo(width/2, height/2-20); context.lineTo(width/2, height/2+20);
+            context.stroke();
         }
         updateUI();
-    }
-
-    function createGreatCircleLine(center, bearing) {
-        return {
-            type: "LineString",
-            coordinates: d3.range(-179, 181, 2).map(distance => destinationPoint(center, bearing, distance))
-        };
-    }
-
-    function destinationPoint(center, bearing, distance) {
-        const lon1 = center[0] * Math.PI / 180;
-        const lat1 = center[1] * Math.PI / 180;
-        const theta = bearing * Math.PI / 180;
-        const delta = distance * Math.PI / 180;
-        const sinLat2 = Math.sin(lat1) * Math.cos(delta) + Math.cos(lat1) * Math.sin(delta) * Math.cos(theta);
-        const lat2 = Math.asin(Math.max(-1, Math.min(1, sinLat2)));
-        const lon2 = lon1 + Math.atan2(
-            Math.sin(theta) * Math.sin(delta) * Math.cos(lat1),
-            Math.cos(delta) - Math.sin(lat1) * Math.sin(lat2)
-        );
-
-        return [normalizeLongitude(lon2 * 180 / Math.PI), lat2 * 180 / Math.PI];
-    }
-
-    function normalizeLongitude(lon) {
-        return ((lon + 540) % 360) - 180;
-    }
-
-    function drawCenterGuide() {
-        const center = [-rotation[0], -rotation[1]];
-        context.beginPath();
-        path(createGreatCircleLine(center, 0));
-        path(createGreatCircleLine(center, 90));
-        context.stroke();
-
-        context.beginPath();
-        context.moveTo(width/2-20, height/2); context.lineTo(width/2+20, height/2);
-        context.moveTo(width/2, height/2-20); context.lineTo(width/2, height/2+20);
-        context.stroke();
     }
 
     function updateUI() {
