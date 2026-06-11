@@ -14,6 +14,8 @@
             --border: rgba(128,128,128,0.2);
             --text: #fff;
             --btn-text: #363636;
+            --switch-on: #ff6b6b;
+            --axis-color: #ff6b6b;
         }
         * { box-sizing: border-box; }
         html, body { height: 100%; }
@@ -45,7 +47,7 @@
         .switch input { opacity: 0; width: 0; height: 0; }
         .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background: #21262d; transition: .3s; border-radius: 20px; border: 1px solid var(--border); }
         .slider:before { position: absolute; content: ""; height: 12px; width: 12px; left: 2px; bottom: 2px; background: white; transition: .3s; border-radius: 50%; box-shadow: 0 1px 3px rgba(0,0,0,0.4); }
-        input:checked + .slider { background: var(--accent); }
+        input:checked + .slider { background: var(--switch-on); border-color: var(--switch-on); }
         input:checked + .slider:before { transform: translateX(16px); }
 
         #sidebar-footer { margin-top: auto; padding-top: 20px; border-top: 1px solid var(--border); }
@@ -65,6 +67,25 @@
 
         #map-container { min-width: 0; min-height: 0; position: relative; background: var(--bg); touch-action: none; }
         canvas { display: block; width: 100%; height: 100%; }
+        #axis-overlay { position: absolute; inset: 0; display: none; pointer-events: none; z-index: 1200; }
+        #axis-overlay.active { display: block; }
+        .axis-line { position: absolute; background: var(--axis-color); opacity: 0.95; }
+        .axis-line.vertical {
+            top: 0;
+            bottom: 0;
+            left: 50%;
+            width: 2px;
+            transform: translateX(-1px);
+            background: repeating-linear-gradient(to bottom, var(--axis-color) 0 7px, transparent 7px 14px);
+        }
+        .axis-line.horizontal {
+            top: 50%;
+            left: 0;
+            right: 0;
+            height: 2px;
+            transform: translateY(-1px);
+            background: repeating-linear-gradient(to right, var(--axis-color) 0 7px, transparent 7px 14px);
+        }
         #map-status { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; padding: 24px; text-align: center; color: var(--text); background: var(--bg); font-size: 13px; line-height: 1.7; z-index: 1500; }
 
         @media (max-width: 720px) {
@@ -151,6 +172,10 @@
     </div>
     <div id="map-status">Loading map data...</div>
     <canvas id="map"></canvas>
+    <div id="axis-overlay" aria-hidden="true">
+        <div class="axis-line vertical"></div>
+        <div class="axis-line horizontal"></div>
+    </div>
 </div>
 
 <script>
@@ -224,7 +249,10 @@
         root.style.setProperty('--panel', theme.panel);
         root.style.setProperty('--text', theme.text);
         root.style.setProperty('--btn-text', theme.btnText);
+        root.style.setProperty('--switch-on', theme.guide);
+        root.style.setProperty('--axis-color', theme.guide);
         root.style.setProperty('--border', theme.border === "#ffffff66" ? "rgba(255,255,255,0.2)" : "rgba(128,128,128,0.2)");
+        $('axis-overlay').classList.toggle('active', $('check-guide').checked);
         
         context.fillStyle = theme.bg;
         context.fillRect(0, 0, width, height);
