@@ -114,7 +114,7 @@
         <div class="control-group"><span id="lbl-borders">BORDERS</span><label class="switch"><input type="checkbox" id="check-borders" checked><span class="slider"></span></label></div>
         <div class="control-group"><span id="lbl-cities">CITY NAMES</span><label class="switch"><input type="checkbox" id="check-city-names" checked><span class="slider"></span></label></div>
         <div class="control-group"><span id="lbl-circles">DIST. CIRCLES</span><label class="switch"><input type="checkbox" id="check-circles" checked><span class="slider"></span></label></div>
-        <div class="control-group"><span id="lbl-guide">CENTER GUIDE</span><label class="switch"><input type="checkbox" id="check-guide" checked><span class="slider"></span></label></div>
+        <div class="control-group"><span id="lbl-guide">CENTRAL AXIS</span><label class="switch"><input type="checkbox" id="check-guide" checked><span class="slider"></span></label></div>
         <div class="control-group"><span id="lbl-grid">GRATICULE</span><label class="switch"><input type="checkbox" id="check-grid" checked><span class="slider"></span></label></div>
     </div>
 
@@ -172,8 +172,8 @@
     ];
 
     const TRANSLATIONS = {
-        en: { appTitle: "Azimuthal Equidistant Map", headCity: "City Presets", headTelemetry: "Telemetry", headMeasure: "Measurement", headLayers: "Layers", cfgTitle: "SYSTEM SETTINGS", lblLat: "LATITUDE", lblLng: "LONGITUDE", lblRoll: "HEADING", lblScale: "SCALE", lblDist: "DISTANCE", lblBorders: "BORDERS", lblCities: "CITY NAMES", lblCircles: "DIST. CIRCLES", lblGuide: "CENTER GUIDE", lblGrid: "GRATICULE", lblTheme: "VISUAL THEME", btnExport: "EXPORT PNG" },
-        jp: { appTitle: "正距方位図ビューア", headCity: "都市プリセット", headTelemetry: "テレメトリ", headMeasure: "距離計測", headLayers: "レイヤー設定", cfgTitle: "システム設定", lblLat: "緯度 (LAT)", lblLng: "経度 (LNG)", lblRoll: "方位角 (ROLL)", lblScale: "スケール", lblDist: "中心からの距離", lblBorders: "国境線", lblCities: "都市名表示", lblCircles: "等距離円", lblGuide: "センターガイド", lblGrid: "経緯度網", lblTheme: "配色テーマ", btnExport: "PNG形式で保存" }
+        en: { appTitle: "Azimuthal Equidistant Map", headCity: "City Presets", headTelemetry: "Telemetry", headMeasure: "Measurement", headLayers: "Layers", cfgTitle: "SYSTEM SETTINGS", lblLat: "LATITUDE", lblLng: "LONGITUDE", lblRoll: "HEADING", lblScale: "SCALE", lblDist: "DISTANCE", lblBorders: "BORDERS", lblCities: "CITY NAMES", lblCircles: "DIST. CIRCLES", lblGuide: "CENTRAL AXIS", lblGrid: "GRATICULE", lblTheme: "VISUAL THEME", btnExport: "EXPORT PNG" },
+        jp: { appTitle: "正距方位図ビューア", headCity: "都市プリセット", headTelemetry: "テレメトリ", headMeasure: "距離計測", headLayers: "レイヤー設定", cfgTitle: "システム設定", lblLat: "緯度 (LAT)", lblLng: "経度 (LNG)", lblRoll: "方位角 (ROLL)", lblScale: "スケール", lblDist: "中心からの距離", lblBorders: "国境線", lblCities: "都市名表示", lblCircles: "等距離円", lblGuide: "中央軸", lblGrid: "経緯度網", lblTheme: "配色テーマ", btnExport: "PNG形式で保存" }
     };
 
     const BASE_SCALE = 150;
@@ -252,38 +252,16 @@
         updateUI();
     }
 
-    function createGreatCircleLine(center, bearing) {
-        return {
-            type: "LineString",
-            coordinates: d3.range(-179, 181, 2).map(distance => destinationPoint(center, bearing, distance))
-        };
-    }
-
-    function destinationPoint(center, bearing, distance) {
-        const lon1 = center[0] * Math.PI / 180;
-        const lat1 = center[1] * Math.PI / 180;
-        const theta = bearing * Math.PI / 180;
-        const delta = distance * Math.PI / 180;
-        const sinLat2 = Math.sin(lat1) * Math.cos(delta) + Math.cos(lat1) * Math.sin(delta) * Math.cos(theta);
-        const lat2 = Math.asin(Math.max(-1, Math.min(1, sinLat2)));
-        const lon2 = lon1 + Math.atan2(
-            Math.sin(theta) * Math.sin(delta) * Math.cos(lat1),
-            Math.cos(delta) - Math.sin(lat1) * Math.sin(lat2)
-        );
-
-        return [normalizeLongitude(lon2 * 180 / Math.PI), lat2 * 180 / Math.PI];
-    }
-
-    function normalizeLongitude(lon) {
-        return ((lon + 540) % 360) - 180;
-    }
-
     function drawCenterGuide() {
-        const center = [-rotation[0], -rotation[1]];
+        context.save();
+        context.setLineDash([6, 6]);
         context.beginPath();
-        path(createGreatCircleLine(center, 0));
-        path(createGreatCircleLine(center, 90));
+        context.moveTo(width / 2, 0);
+        context.lineTo(width / 2, height);
+        context.moveTo(0, height / 2);
+        context.lineTo(width, height / 2);
         context.stroke();
+        context.restore();
 
         context.beginPath();
         context.moveTo(width/2-20, height/2); context.lineTo(width/2+20, height/2);
