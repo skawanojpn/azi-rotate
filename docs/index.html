@@ -253,26 +253,19 @@
     }
 
     function drawCenterGuide() {
-        const cx = width / 2;
-        const cy = height / 2;
         context.save();
         context.setLineDash([6, 6]);
-        strokeAxisSegment(cx, cy, cx, 0);
-        strokeAxisSegment(cx, cy, cx, height);
-        strokeAxisSegment(cx, cy, 0, cy);
-        strokeAxisSegment(cx, cy, width, cy);
+        context.beginPath();
+        context.moveTo(width / 2, 0);
+        context.lineTo(width / 2, height);
+        context.moveTo(0, height / 2);
+        context.lineTo(width, height / 2);
+        context.stroke();
         context.restore();
 
         context.beginPath();
-        context.moveTo(cx-20, cy); context.lineTo(cx+20, cy);
-        context.moveTo(cx, cy-20); context.lineTo(cx, cy+20);
-        context.stroke();
-    }
-
-    function strokeAxisSegment(fromX, fromY, toX, toY) {
-        context.beginPath();
-        context.moveTo(fromX, fromY);
-        context.lineTo(toX, toY);
+        context.moveTo(width/2-20, height/2); context.lineTo(width/2+20, height/2);
+        context.moveTo(width/2, height/2-20); context.lineTo(width/2, height/2+20);
         context.stroke();
     }
 
