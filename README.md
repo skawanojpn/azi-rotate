@@ -9,7 +9,7 @@ Azimuthal Equidistant Map is a single-page browser tool for viewing the world wi
 - Distance readout from the map center
 - Toggleable borders, city names, distance circles, center guide, and graticule
 - Visual themes, with Classic selected by default
-- Mobile-friendly layout with the map above the control panel
+- Mobile-friendly layout with the map above the control panel and a fit-to-view default scale
 - PNG export of the current map view
 
 ## Usage
@@ -21,6 +21,7 @@ Controls:
 - Drag the map to move the projection center.
 - Hold Shift while dragging to rotate the heading.
 - Use the mouse wheel or trackpad scroll to zoom.
+- Pinch on mobile devices to zoom in and out.
 - Select a preset city to center the map there.
 - Edit latitude, longitude, heading, or scale directly when precise values are needed.
 
